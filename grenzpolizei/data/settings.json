@@ -1,0 +1,30 @@
+{
+    "154916655917432832" : {
+        "channels" : {
+            "guild_event_channel" : 368364547335258112,
+            "member_event_channel" : 368364483141304320,
+            "message_event_channel" : 368365536968704011,
+            "mod_event_channel" : 368364576166903818
+        },
+        "events" : {
+            "on_ban" : true,
+            "on_guild_channel_create" : true,
+            "on_guild_channel_delete" : true,
+            "on_guild_channel_update" : true,
+            "on_guild_role_create" : true,
+            "on_guild_role_delete" : true,
+            "on_guild_role_update" : true,
+            "on_guild_update" : true,
+            "on_kick" : true,
+            "on_member_ban" : true,
+            "on_member_join" : true,
+            "on_member_remove" : true,
+            "on_member_unban" : true,
+            "on_member_update" : true,
+            "on_message_delete" : true,
+            "on_message_edit" : true,
+            "on_voice_state_update" : true,
+            "on_warning" : true
+        }
+    }
+}
