@@ -1,6 +1,6 @@
 import asyncio
 import discord
-from core.i18n import CogI18n
+from redbot.core.i18n import CogI18n
 
 _ = CogI18n("Grenzpolizei", __file__)
 

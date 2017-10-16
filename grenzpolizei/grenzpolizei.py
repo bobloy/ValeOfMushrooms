@@ -1,7 +1,7 @@
 import os
 import discord
-from core import checks
-from core.i18n import CogI18n
+from redbot.core import checks
+from redbot.core.i18n import CogI18n
 from datetime import datetime
 from discord.ext import commands
 

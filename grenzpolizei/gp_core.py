@@ -1,5 +1,5 @@
+from redbot.core.i18n import CogI18n
 from .utils.dataIO import dataIO
-from core.i18n import CogI18n
 import aiohttp
 import inspect
 import discord

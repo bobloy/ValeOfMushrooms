@@ -1,6 +1,6 @@
 from datetime import datetime
 import discord
-from core.i18n import CogI18n
+from redbot.core.i18n import CogI18n
 
 from .gp_core import GrenzpolizeiCore
 from .utils.hacks import Hacks
