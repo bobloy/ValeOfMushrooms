@@ -12,6 +12,7 @@ _ = CogI18n("Grenzpolizei", __file__)
 
 class GrenzpolizeiCore:
     def __init__(self, bot):
+        print(str(core_data_path()) + 'sddf')
         self.settings_file = core_data_path().joinpath("cogs/CogManager/cogs/grenzpolizei/data/settings.json")
         self.ignore_file = core_data_path().joinpath("cogs/CogManager/cogs/grenzpolizei/data/ignore.json")
 
