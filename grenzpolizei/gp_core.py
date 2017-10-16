@@ -12,9 +12,8 @@ _ = CogI18n("Grenzpolizei", __file__)
 
 class GrenzpolizeiCore:
     def __init__(self, bot):
-        print(core_data_path())
-        self.settings_file = core_data_path() + "cogs/CogManager/cogs/grenzpolizei/data/settings.json"
-        self.ignore_file = core_data_path() + "cogs/CogManager/cogs/grenzpolizei/data/ignore.json"
+        self.settings_file = core_data_path().joinpath("cogs/CogManager/cogs/grenzpolizei/data/settings.json")
+        self.ignore_file = core_data_path().joinpath("cogs/CogManager/cogs/grenzpolizei/data/ignore.json")
 
         self.settings = dataIO.load_json(self.settings_file)
         self.ignore = dataIO.load_json(self.ignore_file)
