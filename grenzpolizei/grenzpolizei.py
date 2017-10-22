@@ -6,6 +6,7 @@ from discord.ext import commands
 from .utils.hacks import Hacks
 
 from .gp_core import GrenzpolizeiCore
+from .gp_events import GrenzpolizeiEvents
 
 
 dh = Hacks()
@@ -25,6 +26,8 @@ class Grenzpolizei:
         self.orange = discord.Color.orange()
         self.red = discord.Color.red()
         self.blue = discord.Color.blue()
+
+        GrenzpolizeiEvents(bot)
 
     @commands.group(pass_context=True, name="grenzpolizei", aliases=["gp", "border"])
     async def _grenzpolizei(self, context):
