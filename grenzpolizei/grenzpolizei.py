@@ -1,4 +1,3 @@
-import os
 import discord
 from redbot.core import checks
 from redbot.core.i18n import CogI18n
@@ -13,6 +12,10 @@ from .gp_core import GrenzpolizeiCore
 dh = Hacks()
 
 _ = CogI18n("Grenzpolizei", __file__)
+
+# TODO:
+# individual event enable/disable control
+# member kick reason event
 
 
 class Grenzpolizei:

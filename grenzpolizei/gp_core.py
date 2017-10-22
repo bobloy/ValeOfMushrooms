@@ -12,10 +12,6 @@ COG_FOLDER = str(cog_data_path()) + '\\CogData'
 COG = '\\grenzpolizei\\'
 
 
-# TODO:
-# individual event enable/disable control
-#
-
 class GrenzpolizeiCore:
     def __init__(self, bot):
         self.settings_file = COG_FOLDER + COG + 'settings.json'
@@ -43,7 +39,6 @@ class GrenzpolizeiCore:
         self.event_types["on_guild_role_delete"] = "guild_event_channel"
         self.event_types["on_guild_role_update"] = "guild_event_channel"
 
-        self.event_types["on_warning"] = "mod_event_channel"
         self.event_types["on_member_ban"] = "mod_event_channel"
         self.event_types["on_member_unban"] = "mod_event_channel"
         self.event_types["on_member_kick"] = "mod_event_channel"
