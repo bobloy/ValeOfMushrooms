@@ -4,7 +4,7 @@ from .utils.dataIO import dataIO
 import os
 
 DB_VERSION = 3
-COG_FOLDER = str(cog_data_path()) + '\\data'
+COG_FOLDER = str(cog_data_path()) + '\\CogData'
 COG = '\\grenzpolizei\\'
 
 

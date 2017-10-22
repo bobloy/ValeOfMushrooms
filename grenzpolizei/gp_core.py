@@ -8,7 +8,7 @@ import discord
 from .gp_setup import GrenzpolizeiSetup
 
 _ = CogI18n("Grenzpolizei", __file__)
-COG_FOLDER = str(cog_data_path()) + '\\data'
+COG_FOLDER = str(cog_data_path()) + '\\CogData'
 COG = '\\grenzpolizei\\'
 
 
