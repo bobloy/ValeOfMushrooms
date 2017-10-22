@@ -1,4 +1,4 @@
-from redbot.core.data_manager import core_data_path
+from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import CogI18n
 from .utils.dataIO import dataIO
 import aiohttp
@@ -12,9 +12,8 @@ _ = CogI18n("Grenzpolizei", __file__)
 
 class GrenzpolizeiCore:
     def __init__(self, bot):
-        print(str(core_data_path()) + 'sddf')
-        self.settings_file = (str(core_data_path()) + "\\core\\cogs\\CogManager\\cogs\\grenzpolizei\\data\\settings.json").replace('\\', '/')
-        self.ignore_file = (str(core_data_path()) + "\\core\\cogs\\CogManager\\cogs\\grenzpolizei\\data\\ignore.json").replace('\\', '/')
+        self.settings_file = str(cog_data_path()) + "\\CogManager\\cogs\\grenzpolizei\\data\\settings.json"
+        self.ignore_file = str(cog_data_path()) + "\\CogManager\\cogs\\grenzpolizei\\data\\ignore.json"
 
         self.settings = dataIO.load_json(self.settings_file)
         self.ignore = dataIO.load_json(self.ignore_file)
