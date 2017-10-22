@@ -12,6 +12,10 @@ COG_FOLDER = str(cog_data_path()) + '\\CogData'
 COG = '\\grenzpolizei\\'
 
 
+# TODO:
+# individual event enable/disable control
+#
+
 class GrenzpolizeiCore:
     def __init__(self, bot):
         self.settings_file = COG_FOLDER + COG + 'settings.json'
