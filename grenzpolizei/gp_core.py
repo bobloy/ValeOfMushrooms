@@ -8,12 +8,14 @@ import discord
 from .gp_setup import GrenzpolizeiSetup
 
 _ = CogI18n("Grenzpolizei", __file__)
+COG_FOLDER = str(cog_data_path()) + '\\data'
+COG = '\\grenzpolizei\\'
 
 
 class GrenzpolizeiCore:
     def __init__(self, bot):
-        self.settings_file = str(cog_data_path()) + "\\CogManager\\cogs\\grenzpolizei\\data\\settings.json"
-        self.ignore_file = str(cog_data_path()) + "\\CogManager\\cogs\\grenzpolizei\\data\\ignore.json"
+        self.settings_file = COG_FOLDER + COG + 'settings.json'
+        self.ignore_file = COG_FOLDER + COG + 'ignore.json'
 
         self.settings = dataIO.load_json(self.settings_file)
         self.ignore = dataIO.load_json(self.ignore_file)
