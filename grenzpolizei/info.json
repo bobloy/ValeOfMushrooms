@@ -4,6 +4,6 @@
   "description" : "Be a despotic dictator and keep tabs on every member on the server.",
   "short" : "Be a despotic dictator and keep tabs on everything that happens on the server.",
   "tags" : ["tracking", "logging", "modding", "dictator", "grenzpolizei"],
-  "install_msg" : "Hey there! Thank you for installing the alpha version of Grenzpolizei V3. If you need any help, have feedback, or just want to talk to the creator (I have :coffee: , :tea: and :cookie: ), visit: https://discord.gg/TpF2SVJ",
+  "install_msg" : "Hey there! Thank you for installing the alpha version of Grenzpolizei V3. If you need any help, have feedback, or just want to talk to the creator (I have :coffee: , :tea: and :cookie:), visit: https://discord.gg/TpF2SVJ",
   "hidden" : false
 }
