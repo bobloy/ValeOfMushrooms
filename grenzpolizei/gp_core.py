@@ -1,107 +1,134 @@
 import aiohttp
 import inspect
 import discord
+import os
+from .gp_setup import GrenzpolizeiSetup
+import redbot.core.data_manager as datam
 import json
+from redbot.core.i18n import CogI18n
 
-from gp_setup import GrenzpolizeiSetup
-from redbot.core import Config
+_ = CogI18n('GrenzpolizeiCore', __file__)
 
 
 class GrenzpolizeiCore:
     def __init__(self, bot):
         self.bot = bot
 
-        self.config = Config.get_conf(
-            self, identifier=78631113035100160, force_registration=True)
-        self.config.register_global(settings={})
+        self.path = str(datam.cog_data_path(self)).replace('\\', '/')
+        self.attachment_path = self.path + '/attachments'
+        self.settings_file = 'settings'
+
+        self.check_folder()
+        self.check_file()
+
         self.bot.loop.create_task(self.load_settings())
 
         self.event_channels = ['member_event_channel', 'message_event_channel', 'guild_event_channel', 'mod_event_channel']
 
         self.event_types = {}
 
-        self.event_types["on_member_update"] = "member_event_channel"
-        self.event_types["on_voice_state_update"] = "member_event_channel"
+        self.event_types['on_member_update'] = 'member_event_channel'
+        self.event_types['on_voice_state_update'] = 'member_event_channel'
 
-        self.event_types["on_message_edit"] = "message_event_channel"
-        self.event_types["on_message_delete"] = "message_event_channel"
-        self.event_types["on_raw_bulk_message_delete"] = "guild_event_channel"
+        self.event_types['on_message_edit'] = 'message_event_channel'
+        self.event_types['on_message_delete'] = 'message_event_channel'
+        self.event_types['on_raw_bulk_message_delete'] = 'guild_event_channel'
 
-        self.event_types["on_guild_channel_create"] = "guild_event_channel"
-        self.event_types["on_guild_channel_delete"] = "guild_event_channel"
-        self.event_types["on_guild_channel_update"] = "guild_event_channel"
-        self.event_types["on_guild_update"] = "guild_event_channel"
+        self.event_types['on_guild_channel_create'] = 'guild_event_channel'
+        self.event_types['on_guild_channel_delete'] = 'guild_event_channel'
+        self.event_types['on_guild_channel_update'] = 'guild_event_channel'
+        self.event_types['on_guild_update'] = 'guild_event_channel'
 
-        self.event_types["on_guild_role_create"] = "guild_event_channel"
-        self.event_types["on_guild_role_delete"] = "guild_event_channel"
-        self.event_types["on_guild_role_update"] = "guild_event_channel"
+        self.event_types['on_guild_role_create'] = 'guild_event_channel'
+        self.event_types['on_guild_role_delete'] = 'guild_event_channel'
+        self.event_types['on_guild_role_update'] = 'guild_event_channel'
 
-        self.event_types["on_member_ban"] = "mod_event_channel"
-        self.event_types["on_member_unban"] = "mod_event_channel"
-        self.event_types["on_member_kick"] = "mod_event_channel"
-        self.event_types["on_member_remove"] = "mod_event_channel"
-        self.event_types["on_member_join"] = "mod_event_channel"
+        self.event_types['on_member_ban'] = 'mod_event_channel'
+        self.event_types['on_member_unban'] = 'mod_event_channel'
+        self.event_types['on_member_kick'] = 'mod_event_channel'
+        self.event_types['on_member_remove'] = 'mod_event_channel'
+        self.event_types['on_member_join'] = 'mod_event_channel'
 
-        self.event_types["on_warning"] = "mod_event_channel"
+        self.event_types['on_warning'] = 'mod_event_channel'
+
+    def check_folder(self):
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
+        if not os.path.exists(self.attachment_path):
+            os.mkdir(self.attachment_path)
+
+    def check_file(self):
+        if not os.path.exists(self.path + '/{}.json'.format(self.settings_file)):
+            self.save_json(self.settings_file, {})
+
+    def save_json(self, filename, data):
+        with open(self.path + '/{}.json'.format(filename), encoding='utf-8', mode='w') as f:
+            json.dump(data, f, indent=4, sort_keys=True, separators=(',', ' : '))
+        return data
+
+    def load_json(self, filename):
+        with open(self.path + '/{}.json'.format(filename), encoding='utf-8', mode='r') as f:
+            data = json.load(f)
+        return data
 
     async def load_settings(self):
-        self.settings = await self.config.settings()
+        self.settings = self.load_json(self.settings_file)
 
     async def save_settings(self):
-        await self.config.settings.set(self.settings)
+        self.save_json(self.settings_file, self.settings)
 
     async def _ignore_server_check(self, guild):
-        if 'ignore' not in self.settings[str(guild.id)]:
-            self.settings[str(guild.id)] = {}
-            self.settings[str(guild.id)]['ignore'] = {}
-            self.settings[str(guild.id)]['ignore']['members'] = {}
-            self.settings[str(guild.id)]['ignore']['channels'] = {}
-            self.settings[str(guild.id)]['ignore']['roles'] = {}
-        return True
+        if str(guild.id) in self.settings:
+            if 'ignore' in self.settings[str(guild.id)]:
+                return True
+        return False
 
     async def ignoremember(self, guild, author):
-        await self._ignore_server_check(guild)
-        if str(author.id) in self.ignore[str(guild.id)]['ignore']['members']:
-            del self.settings[str(guild.id)]['ignore']['members'][str(author.id)]
-            await self.save_settings()
-            return "Tracking {} again".format(author.mention)
+        if str(guild.id) in self.settings:
+            if 'ignore' not in self.settings[str(guild.id)]:
+                self.settings[str(guild.id)]['ignore'] = {}
+                self.settings[str(guild.id)]['ignore']['members'] = {}
+                self.settings[str(guild.id)]['ignore']['channels'] = {}
+
+            if str(author.id) in self.settings[str(guild.id)]['ignore']['members']:
+                del self.settings[str(guild.id)]['ignore']['members'][str(author.id)]
+                await self.save_settings()
+                return _('Tracking {} again').format(author.mention)
+            else:
+                self.settings[str(guild.id)]['ignore']['members'][str(author.id)] = True
+                await self.save_settings()
+                return _('Not tracking {} anymore').format(author.mention)
         else:
-            self.settings[str(guild.id)]['ignore']['members'][str(author.id)] = True
-            await self.save_settings()
-            return "Not tracking {} anymore".format(author.mention)
+            return _('Please run the setup first!')
 
     async def ignorechannel(self, guild, channel):
-        await self._ignore_server_check(guild)
-        if str(channel.id) in self.ignore[str(guild.id)]['ignore']['channels']:
-            del self.settings[str(guild.id)]['ignore']['channels'][str(channel.id)]
-            await self.save_settings()
-            return "Tracking {} again".format(channel.mention)
-        else:
-            self.settigns[str(guild.id)]['ignore']['channels'][str(channel.id)] = True
-            await self.save_settings()
-            return "Not tracking {} anymore".format(channel.mention)
+        if str(guild.id) in self.settings:
+            if 'ignore' not in self.settings[str(guild.id)]:
+                self.settings[str(guild.id)]['ignore'] = {}
+                self.settings[str(guild.id)]['ignore']['members'] = {}
+                self.settings[str(guild.id)]['ignore']['channels'] = {}
 
-    async def ignorerole(self, guild, role):
-        await self._ignore_server_check(guild)
-        if str(role.id) in self.settings[str(guild.id)]['ignore']['roles']:
-            del self.settings[str(guild.id)]['ignore']['roles'][str(role.id)]
-            await self.save_settings()
-            return "Tracking {} again".format(role.mention)
+            if str(channel.id) in self.settings[str(guild.id)]['ignore']['channels']:
+                del self.settings[str(guild.id)]['ignore']['channels'][str(channel.id)]
+                await self.save_settings()
+                return _('Tracking {} again').format(channel.mention)
+            else:
+                self.settings[str(guild.id)]['ignore']['channels'][str(channel.id)] = True
+                await self.save_settings()
+                return _('Not tracking {} anymore').format(channel.mention)
         else:
-            self.settings[str(guild.id)]['ignore']['roles'][str(role.id)] = True
-            await self.save_settings()
-            return "Not tracking {} anymore".format(role.mention)
+            return _('Please run the setup first!')
 
-    async def _ignore(self, guild, author=None, channel=None):
-        await self._ignore_server_check(guild)
-        if channel:
-            if str(channel.id) in self.settings[str(guild.id)]['ignore']["channels"]:
-                return False
-        if author:
-            if str(author.id) in self.settings[str(guild.id)]['ignore']["members"]:
-                return False
-            if [role.id for role in author.roles if str(role.id) in self.settings[str(guild.id)]['ignore']["roles"]]:
-                return False
+    async def _ignore(self, guild, author=None, channel=None, role=None):
+        if await self._ignore_server_check(guild):
+            if channel:
+                if str(channel.id) in self.settings[str(guild.id)]['ignore']['channels']:
+                    return False
+            if author:
+                if str(author.id) in self.settings[str(guild.id)]['ignore']['members']:
+                    return False
+                if [role.id for role in author.roles if str(role.id) in self.settings[str(guild.id)]['ignore']['roles']]:
+                    return False
         return True
 
     async def _validate_server(self, guild):
@@ -109,12 +136,12 @@ class GrenzpolizeiCore:
 
     async def _validate_event(self, guild):
         try:
-            return self.settings[str(guild.id)]["events"][inspect.stack()[1][3]] if await self._validate_server(guild) else False
+            return self.settings[str(guild.id)]['events'][inspect.stack()[1][3]] if await self._validate_server(guild) else False
         except KeyError:
             return False
 
     async def _get_channel(self, guild):
-        return discord.utils.get(self.bot.get_all_channels(), id=self.settings[str(guild.id)]["channels"][self.event_types[inspect.stack()[2][3]]])
+        return discord.utils.get(self.bot.get_all_channels(), id=self.settings[str(guild.id)]['channels'][self.event_types[inspect.stack()[2][3]]])
 
     async def _send_message_to_channel(self, guild, content=None, embed=None, attachment=None):
         channel = await self._get_channel(guild)
@@ -125,12 +152,10 @@ class GrenzpolizeiCore:
                 await channel.send(content=content, file=discord.File(attachment))
             elif content:
                 await channel.send(content=content)
-        else:
-            pass  # needs error!
 
     async def saveattachement(self, data, filename, message_id):
-        filename = "{}-{}".format(str(message_id), filename)
-        with open('attachments/'+filename, 'wb') as f:
+        filename = '{}-{}'.format(str(message_id), filename)
+        with open(self.attachment_path+'/'+filename, 'wb') as f:
             f.write(data)
         return filename
 
