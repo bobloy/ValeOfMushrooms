@@ -127,7 +127,7 @@ class LastFM:
                     tags = await self._api_request(method='track.getTopTags', track=song, artist=artist, autocorrect=1)
                     trackinfo = await self._api_request(method='track.getInfo', track=song, artist=artist, username=username)
 
-                    if trackinfo:
+                    if 'userplaycount' in trackinfo:
                         playcount = trackinfo['track']['userplaycount']
                     else:
                         playcount = None
