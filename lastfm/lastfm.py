@@ -127,7 +127,10 @@ class LastFM:
                     tags = await self._api_request(method='track.getTopTags', track=song, artist=artist, autocorrect=1)
                     trackinfo = await self._api_request(method='track.getInfo', track=song, artist=artist, username=username)
 
-                    playcount = trackinfo['track']['userplaycount']
+                    if trackinfo:
+                        playcount = trackinfo['track']['userplaycount']
+                    else:
+                        playcount = None
 
                     if 'error' not in tags:
                         tags = ', '.join(['[{}]({})'.format(tag['name'], tag['url']) for tag in tags['toptags']['tag'][:10]])
@@ -142,7 +145,8 @@ class LastFM:
                     em.set_image(url=image)
                     em.add_field(name=_('**Artist**'), value='[{}]({})'.format(artist, artist_url))
                     em.add_field(name=_('**Track**'), value='[{}]({})'.format(song, track_url))
-                    em.add_field(name=_('**Playcount**'), value='{}'.format(playcount))
+                    if playcount:
+                        em.add_field(name=_('**Playcount**'), value='{}'.format(playcount))
                     em.add_field(name=_('**Album**'), value='[{}]({})'.format(album, album_url))
                     if tags:
                         em.add_field(name=_('**Tags**'), value=tags, inline=False)
