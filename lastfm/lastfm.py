@@ -142,7 +142,7 @@ class LastFM:
                     album = [album if len(album) < 18 else album[:18] + '...'][0]
 
                     em = discord.Embed()
-                    em.set_image(url=image)
+                    em.set_thumbnail(url=image)
                     em.add_field(name=_('**Artist**'), value='[{}]({})'.format(artist, artist_url))
                     em.add_field(name=_('**Track**'), value='[{}]({})'.format(song, track_url))
                     em.add_field(name=_('**Playcount**'), value='{}'.format(playcount))
