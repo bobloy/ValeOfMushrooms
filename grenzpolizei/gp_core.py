@@ -61,6 +61,21 @@ class GrenzpolizeiCore:
                 return True
         return False
 
+    async def compactmode(self, guild):
+        if str(guild.id) in self.settings:
+            if 'compact' not in self.settings[str(guild.id)]:
+                self.settings[str(guild.id)]['compact'] = False
+            if self.settings[str(guild.id)]['compact']:
+                self.settings[str(guild.id)]['compact'] = False
+                await self.save_settings()
+                return _('Compact mode **disabled**')
+            else:
+                self.settings[str(guild.id)]['compact'] = True
+                await self.save_settings()
+                return _('Compact mode **enabled**')
+        else:
+            return _('Please run the setup first!')
+
     async def ignoremember(self, guild, author):
         if str(guild.id) in self.settings:
             if 'ignore' not in self.settings[str(guild.id)]:
@@ -97,7 +112,7 @@ class GrenzpolizeiCore:
         else:
             return _('Please run the setup first!')
 
-    async def _ignore(self, guild, author=None, channel=None, role=None):
+    async def _ignore(self, guild, author=None, channel=None):
         if await self._ignore_server_check(guild):
             if channel:
                 if str(channel.id) in self.settings[str(guild.id)]['ignore']['channels']:
@@ -105,8 +120,6 @@ class GrenzpolizeiCore:
             if author:
                 if str(author.id) in self.settings[str(guild.id)]['ignore']['members']:
                     return False
-                # if [role.id for role in author.roles if str(role.id) in self.settings[str(guild.id)]['ignore']['roles']]:
-                #    return False
         return True
 
     async def _validate_server(self, guild):
@@ -127,7 +140,22 @@ class GrenzpolizeiCore:
         channel = await self._get_channel(guild)
         if channel:
             if embed:
-                await channel.send(content=content, embed=embed)
+                if 'compact' in self.settings[str(guild.id)]:
+                    if not self.settings[str(guild.id)]['compact']:
+                        await channel.send(content=content, embed=embed)
+                    else:
+                        emdict = embed.to_dict()
+                        content = ''
+                        if 'author' in emdict:
+                            content += '**{}**\n'.format(emdict['author']['name'])
+                        if 'fields' in emdict:
+                            for field in emdict['fields']:
+                                content += '**{}:** {}\n'.format(field['name'].replace('\n', ' ').replace('**', ''), field['value'].replace('\n', ''))
+                        if 'description' in emdict:
+                            content += '{}\n'.format(emdict['description'])
+                        if 'footer' in emdict:
+                            content += '_{}_'.format(emdict['footer']['text'])
+                        await channel.send(content=content)
             elif attachment:
                 await channel.send(content=content, file=discord.File(attachment))
             elif content:

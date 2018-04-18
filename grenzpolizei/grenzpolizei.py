@@ -21,7 +21,14 @@ class Grenzpolizei:
         self.blue = discord.Color.blue()
         self.black = discord.Color.from_rgb(15, 2, 2)
 
-    @commands.group(name='event')
+    @commands.group(name='grenzpolizei', aliases=['gp'])
+    @commands.has_permissions(administrator=True)
+    async def _grenzpolizei(self, context):
+        '''
+        The Grenzpolizei Cog
+        '''
+
+    @_grenzpolizei.group(name='event')
     @commands.has_permissions(administrator=True)
     async def _grenzpolizei_event(self, context):
         '''
@@ -60,7 +67,7 @@ class Grenzpolizei:
             embed = discord.Embed(title=_('Available event types'), description=message, color=self.green)
             await context.send(embed=embed)
 
-    @commands.command(name='setup')
+    @_grenzpolizei.command(name='setup')
     @commands.has_permissions(administrator=True)
     async def _grenzpolizei_setup(self, context):
         '''
@@ -72,11 +79,11 @@ class Grenzpolizei:
         else:
             await context.channel.send(_('Please try again, it didn\'t go quite alright.'))
 
-    @commands.command(name='autosetup')
+    @_grenzpolizei.command(name='autosetup')
     @commands.has_permissions(administrator=True)
     async def _grenzpolizei_autosetup(self, context):
         '''
-        Begin your journey into authoritarianism, automatically
+        RECOMMENDED! Begin your journey into authoritarianism, automatically.
         '''
         try:
             x = await self.core._start_auto_setup(context)
@@ -87,7 +94,17 @@ class Grenzpolizei:
         except discord.Forbidden:
             await context.send(_('I don\'t have the permissions to create channels.'))
 
-    @commands.command(name='ignoremember')
+    @_grenzpolizei.command(name='compact')
+    @commands.has_permissions(kick_members=True)
+    async def _compactmode(self, context):
+        '''
+        Toggle compact mode for smaller messages
+        '''
+        guild = context.guild
+        channel = context.channel
+        await channel.send(await self.core.compactmode(guild))
+
+    @_grenzpolizei.command(name='ignoremember')
     @commands.has_permissions(kick_members=True)
     async def _ignoremember(self, context, member: discord.Member):
         '''
@@ -97,7 +114,7 @@ class Grenzpolizei:
         channel = context.channel
         await channel.send(await self.core.ignoremember(guild, member))
 
-    @commands.command(name='ignorechannel')
+    @_grenzpolizei.command(name='ignorechannel')
     @commands.has_permissions(kick_members=True)
     async def _ignorechannel(self, context, channel: discord.TextChannel):
         '''
@@ -107,7 +124,7 @@ class Grenzpolizei:
         channel = context.channel
         await channel.send(await self.core.ignorechannel(guild, channel))
 
-    @commands.command(name='warn')
+    @_grenzpolizei.command(name='warn')
     @commands.has_permissions(kick_members=True)
     async def _warn(self, context, member: discord.Member, *, reason):
         '''
@@ -122,7 +139,7 @@ class Grenzpolizei:
             message = _('Something didn\'t go quite right.')
         await self.core._send_message_to_channel(guild, content=message)
 
-    @commands.command(name='passport')
+    @_grenzpolizei.command(name='passport')
     @commands.has_permissions(kick_members=True)
     async def _passport(self, context, member: discord.Member):
         '''
@@ -133,7 +150,7 @@ class Grenzpolizei:
             return message.author.id == self.bot.user.id and message.embeds
 
         tmp = {}
-        event_channels = self.core.settings[str(context.guild.id)]['channels']
+        event_channels = [channel for channel in [event['channel'] for event in self.core.settings[str(context.guild.id)]['events']]]
         if context.channel.id not in [event_channels[channel] for channel in dict(event_channels.items())]:
             embed = discord.Embed(title=_('The passport of {0.name}#{0.discriminator} contains the following:').format(member), color=discord.Color.orange())
             await context.channel.send(embed=embed)
@@ -150,7 +167,7 @@ class Grenzpolizei:
         else:
             await context.channel.send(_('To prevent major issues, do this in a different channel and not in an event channel!'))
 
-    @commands.command(name='purge')
+    @_grenzpolizei.command(name='purge')
     @commands.has_permissions(kick_members=True)
     async def _purge(self, context, amount: int, member: discord.Member = None):
         '''
