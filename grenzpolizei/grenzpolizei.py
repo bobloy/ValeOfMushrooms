@@ -29,10 +29,11 @@ class Grenzpolizei:
         '''
 
     @_grenzpolizei_event.command(name='enable')
-    async def _enable_event(self, context, event_type: str):
+    async def _enable_event(self, context, event_type: str, channel: discord.TextChannel):
         guild = context.guild
         if event_type.lower() in self.core.event_types:
-            self.core.settings[str(guild.id)]['events'][event_type] = True
+            self.core.settings[str(guild.id)]['events'][event_type]['enabled'] = True
+            self.core.settings[str(guild.id)]['events'][event_type]['channel'] = channel.id
             await self.core.save_settings()
             await context.send(_('Event \'{}\' enabled').format(event_type))
         else:
@@ -48,7 +49,7 @@ class Grenzpolizei:
         guild = context.guild
         if event_type in self.core.event_types:
             guild = context.guild
-            self.core.settings[str(guild.id)]['events'][event_type] = False
+            self.core.settings[str(guild.id)]['events'][event_type]['enabled'] = False
             await self.core.save_settings()
             await context.send(_('Event \'{}\' disabled').format(event_type))
         else:
@@ -57,21 +58,6 @@ class Grenzpolizei:
             for event in self.core.event_types:
                 message += '\n**{}**'.format(event)
             embed = discord.Embed(title=_('Available event types'), description=message, color=self.green)
-            await context.send(embed=embed)
-
-    @_grenzpolizei_event.command(name='channel')
-    async def _event_channel(self, context, event_channel: str, channel: discord.TextChannel):
-        guild = context.guild
-        if event_channel.lower() in self.core.event_channels:
-            self.core.settings[str(guild.id)]['channels'][event_channel] = channel.id
-            await self.core.save_settings()
-            await context.send(_('Event channel changed to {}').format(channel.mention))
-        else:
-            await context.send(_('This event channel does not exist.'))
-            message = _('Copy these exactly in order enable or disable them.\n')
-            for channel in self.core.event_channels:
-                message += '\n**{}**'.format(channel)
-            embed = discord.Embed(title=_('Available event channels'), description=message, color=self.green)
             await context.send(embed=embed)
 
     @commands.command(name='setup')
@@ -256,7 +242,7 @@ class Grenzpolizei:
                 async for entry in guild.audit_logs(limit=1):
                     by_mod = False
                     if entry.action is discord.AuditLogAction.member_update:
-                        the_mod = entry.us_er
+                        the_mod = entry.user
                         by_mod = True
                 if before.name != after.name:
                     embed = discord.Embed(color=self.blue, description=_('From **{0.name}** ({0.id}) to **{1.name}**').format(before, after))

@@ -23,33 +23,11 @@ class GrenzpolizeiCore:
 
         self.bot.loop.create_task(self.load_settings())
 
-        self.event_channels = ['member_event_channel', 'message_event_channel', 'guild_event_channel', 'mod_event_channel']
-
-        self.event_types = {}
-
-        self.event_types['on_member_update'] = 'member_event_channel'
-        self.event_types['on_voice_state_update'] = 'member_event_channel'
-
-        self.event_types['on_message_edit'] = 'message_event_channel'
-        self.event_types['on_message_delete'] = 'message_event_channel'
-        self.event_types['on_raw_bulk_message_delete'] = 'guild_event_channel'
-
-        self.event_types['on_guild_channel_create'] = 'guild_event_channel'
-        self.event_types['on_guild_channel_delete'] = 'guild_event_channel'
-        self.event_types['on_guild_channel_update'] = 'guild_event_channel'
-        self.event_types['on_guild_update'] = 'guild_event_channel'
-
-        self.event_types['on_guild_role_create'] = 'guild_event_channel'
-        self.event_types['on_guild_role_delete'] = 'guild_event_channel'
-        self.event_types['on_guild_role_update'] = 'guild_event_channel'
-
-        self.event_types['on_member_ban'] = 'mod_event_channel'
-        self.event_types['on_member_unban'] = 'mod_event_channel'
-        self.event_types['on_member_kick'] = 'mod_event_channel'
-        self.event_types['on_member_remove'] = 'mod_event_channel'
-        self.event_types['on_member_join'] = 'mod_event_channel'
-
-        self.event_types['on_warning'] = 'mod_event_channel'
+        self.event_types = ['on_member_update', 'on_voice_state_update', 'on_message_edit', 'on_message_delete',
+                            'on_raw_bulk_message_delete', 'on_guild_channel_create', 'on_guild_channel_delete',
+                            'on_guild_channel_update', 'on_guild_update', 'on_guild_role_create', 'on_guild_role_delete',
+                            'on_guild_role_update', 'on_member_ban', 'on_member_unban', 'on_member_kick',
+                            'on_member_remove', 'on_member_join', 'on_warning']
 
     def check_folder(self):
         if not os.path.exists(self.path):
@@ -127,8 +105,8 @@ class GrenzpolizeiCore:
             if author:
                 if str(author.id) in self.settings[str(guild.id)]['ignore']['members']:
                     return False
-                if [role.id for role in author.roles if str(role.id) in self.settings[str(guild.id)]['ignore']['roles']]:
-                    return False
+                # if [role.id for role in author.roles if str(role.id) in self.settings[str(guild.id)]['ignore']['roles']]:
+                #    return False
         return True
 
     async def _validate_server(self, guild):
@@ -136,12 +114,14 @@ class GrenzpolizeiCore:
 
     async def _validate_event(self, guild):
         try:
-            return self.settings[str(guild.id)]['events'][inspect.stack()[1][3]] if await self._validate_server(guild) else False
+            return self.settings[str(guild.id)]['events'][inspect.stack()[1][3]]['enabled'] if await self._validate_server(guild) else False
         except KeyError:
             return False
 
     async def _get_channel(self, guild):
-        return discord.utils.get(self.bot.get_all_channels(), id=self.settings[str(guild.id)]['channels'][self.event_types[inspect.stack()[2][3]]])
+        if not inspect.stack()[2][3] in ['_warn']:
+            return discord.utils.get(self.bot.get_all_channels(), id=self.settings[str(guild.id)]['events'][inspect.stack()[2][3]]['channel'])
+        return False
 
     async def _send_message_to_channel(self, guild, content=None, embed=None, attachment=None):
         channel = await self._get_channel(guild)

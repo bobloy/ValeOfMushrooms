@@ -15,13 +15,92 @@ class GrenzpolizeiSetup:
         self.red = discord.Color.red()
         self.blue = discord.Color.blue()
 
+        self.default_events = {
+            'on_ban': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_channel_create': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_channel_delete': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_channel_update': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_role_create': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_role_delete': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_role_update': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_guild_update': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_kick': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_member_ban': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_member_join': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_member_remove': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_member_unban': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_member_update': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_message_delete': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_message_edit': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_raw_bulk_message_delete': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_voice_state_update': {
+              'enabled': False,
+              'channel': False
+            },
+            'on_warning': {
+              'enabled': False,
+              'channel': False
+            }
+        }
+
     async def _yes_no(self, question, context):
         channel = context.channel
 
         def check(message):
             return context.author.id == message.author.id
-
         bot_message = await channel.send(question)
+
         try:
             message = await self.bot.wait_for('message', timeout=120, check=check)
         except TimeoutError:
@@ -58,13 +137,12 @@ class GrenzpolizeiSetup:
                 await bot_message.edit(content='**{}**'.format(question))
                 return channel
             else:
-                await bot_message.edit(content=_('**That\'s not a valid channel! Please mention a channel.**'))
+                await bot_message.edit(content=_('**That\'s not a valid channel! Disabled.**'))
                 return False
         return False
 
     async def auto_setup(self):
-        events = {}
-        channels = {}
+        events = self.default_events
         guild_config = {}
         overwrites = {
             self.context.guild.default_role: discord.PermissionOverwrite(send_messages=False),
@@ -78,40 +156,59 @@ class GrenzpolizeiSetup:
         guild_event_channel = await self.context.guild.create_text_channel('server-events', category=big_brother_category, reason=_('Grenzpolizei will put all server events in this channel.'))
         mod_event_channel = await self.context.guild.create_text_channel('mod-events', category=big_brother_category, reason=_('Grenzpolizei will put all mod events in this channel.'))
         await message.edit(content=_('Setting up all events...'))
+
         # Member events
-        events['on_member_join'] = True
-        events['on_member_ban'] = True
-        events['on_member_unban'] = True
-        events['on_member_remove'] = True
-        events['on_member_update'] = True
-        events['on_voice_state_update'] = True
+        events['on_member_join']['enabled'] = True
+        events['on_member_ban']['enabled'] = True
+        events['on_member_unban']['enabled'] = True
+        events['on_member_remove']['enabled'] = True
+        events['on_member_update']['enabled'] = True
+        events['on_voice_state_update']['enabled'] = True
+
+        events['on_member_join']['channel'] = member_event_channel.id
+        events['on_member_ban']['channel'] = member_event_channel.id
+        events['on_member_unban']['channel'] = member_event_channel.id
+        events['on_member_remove']['channel'] = member_event_channel.id
+        events['on_member_update']['channel'] = member_event_channel.id
+        events['on_voice_state_update']['channel'] = member_event_channel.id
 
         # Message events
-        events['on_message_delete'] = True
-        events['on_raw_bulk_message_delete'] = True
-        events['on_message_edit'] = True
+        events['on_message_delete']['enabled'] = True
+        events['on_raw_bulk_message_delete']['enabled'] = True
+        events['on_message_edit']['enabled'] = True
+
+        events['on_message_delete']['channel'] = message_event_channel.id
+        events['on_raw_bulk_message_delete']['channel'] = message_event_channel.id
+        events['on_message_edit']['channel'] = message_event_channel.id
 
         # Server events
-        events['on_guild_channel_create'] = True
-        events['on_guild_channel_delete'] = True
-        events['on_guild_channel_update'] = True
-        events['on_guild_update'] = True
+        events['on_guild_channel_create']['enabled'] = True
+        events['on_guild_channel_delete']['enabled'] = True
+        events['on_guild_channel_update']['enabled'] = True
+        events['on_guild_update']['enabled'] = True
 
-        events['on_guild_role_create'] = True
-        events['on_guild_role_delete'] = True
-        events['on_guild_role_update'] = True
+        events['on_guild_role_create']['enabled'] = True
+        events['on_guild_role_delete']['enabled'] = True
+        events['on_guild_role_update']['enabled'] = True
+
+        events['on_guild_channel_create']['channel'] = guild_event_channel.id
+        events['on_guild_channel_delete']['channel'] = guild_event_channel.id
+        events['on_guild_channel_update']['channel'] = guild_event_channel.id
+        events['on_guild_update']['channel'] = guild_event_channel.id
+
+        events['on_guild_role_create']['channel'] = guild_event_channel.id
+        events['on_guild_role_delete']['channel'] = guild_event_channel.id
+        events['on_guild_role_update']['channel'] = guild_event_channel.id
 
         # Warning events
-        events['on_warning'] = True
-        events['on_kick'] = True
-        events['on_ban'] = True
+        events['on_warning']['enabled'] = True
+        events['on_kick']['enabled'] = True
+        events['on_ban']['enabled'] = True
 
-        channels['member_event_channel'] = member_event_channel.id
-        channels['message_event_channel'] = message_event_channel.id
-        channels['guild_event_channel'] = guild_event_channel.id
-        channels['mod_event_channel'] = mod_event_channel.id
+        events['on_warning']['channel'] = mod_event_channel.id
+        events['on_kick']['channel'] = mod_event_channel.id
+        events['on_ban']['channel'] = mod_event_channel.id
 
-        guild_config['channels'] = channels
         guild_config['events'] = events
         await message.edit(content=_('And we\'re all done!'))
         return guild_config
@@ -120,9 +217,8 @@ class GrenzpolizeiSetup:
         channel = self.context.channel
         instructions = _('You\'re required to answer them with either **\'yes\'** or **\'no\'** answers.\n\n'
                          'You get **2 minutes** to answer each question. If not answered it will be defaulted to **\'no\'**.\n\n'
-                         'Then you\'re required to give a channel for each event category, these categories are:\n\n'
-                         '**- member events**\n**- message events**\n**- server events**\n**- warning events.**\n\n'
-                         'Each channel _needs_ to be a channel mention, otherwise it won\'t work. You can use the same channel for all event types.\n'
+                         'Then you\'re required to give a channel for each event.\n\n'
+                         'Each channel _needs_ to be a channel mention, otherwise it won\'t work. You can use the same channel for all event types if your want. But remember that this is the expert mode and a lot of questions will be asked. (38 to be precise)\n'
                          'Make also sure to give proper permissions to the bot to post and embed messages in these channels.\n\n'
                          '**Good luck!**')
 
@@ -130,60 +226,89 @@ class GrenzpolizeiSetup:
         await channel.send(embed=embed)
         await asyncio.sleep(10)
 
-        events = {}
-        channels = {}
+        events = self.default_events
         guild_config = {}
 
         # Member events
-        events['on_member_join'] = await self._yes_no(_('Do you want to track members joining? [y]es/[n]o'), self.context)
-        events['on_member_ban'] = await self._yes_no(_('Do you want to track members being banned? [y]es/[n]o'), self.context)
-        events['on_member_unban'] = await self._yes_no(_('Do you want to track members being unbanned? [y]es/[n]o'), self.context)
-        events['on_member_remove'] = await self._yes_no(_('Do you want to track members leaving this server? [y]es/[n]o'), self.context)
-        events['on_member_update'] = await self._yes_no(_('Do you want to track member changes? [y]es/[n]o'), self.context)
-        events['on_voice_state_update'] = await self._yes_no(_('Do you want to track voice channel changes? [y]es/[n]o'), self.context)
+        events['on_member_join']['enabled'] = await self._yes_no(_('Do you want to track members joining? [y]es/[n]o'), self.context)
+        if events['on_member_join']['enabled']:
+            events['on_member_join']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_member_ban']['enabled'] = await self._yes_no(_('Do you want to track members being banned? [y]es/[n]o'), self.context)
+        if events['on_member_ban']['enabled']:
+            events['on_member_ban']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_member_unban']['enabled'] = await self._yes_no(_('Do you want to track members being unbanned? [y]es/[n]o'), self.context)
+        if events['on_member_unban']['enabled']:
+            events['on_member_unban']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_member_remove']['enabled'] = await self._yes_no(_('Do you want to track members leaving this server? [y]es/[n]o'), self.context)
+        if events['on_member_remove']['enabled']:
+            events['on_member_remove']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_member_update']['enabled'] = await self._yes_no(_('Do you want to track member changes? [y]es/[n]o'), self.context)
+        if events['on_member_update']['enabled']:
+            events['on_member_update']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_voice_state_update']['enabled'] = await self._yes_no(_('Do you want to track voice channel changes? [y]es/[n]o'), self.context)
+        if events['on_voice_state_update']['enabled']:
+            events['on_voice_state_update']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
         # Message events
-        events['on_message_delete'] = await self._yes_no(_('Do you want to track message deletion? [y]es/[n]o'), self.context)
-        events['on_raw_bulk_message_delete'] = await self._yes_no(_('Do you want to track bulk message deletion? [y]es/[n]o'), self.context)
-        events['on_message_edit'] = await self._yes_no(_('Do you want to track message editing? [y]es/[n]o'), self.context)
+        events['on_message_delete']['enabled'] = await self._yes_no(_('Do you want to track message deletion? [y]es/[n]o'), self.context)
+        if events['on_message_delete']['enabled']:
+            events['on_message_delete']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_raw_bulk_message_delete']['enabled'] = await self._yes_no(_('Do you want to track bulk message deletion? [y]es/[n]o'), self.context)
+        if events['on_raw_bulk_message_delete']['enabled']:
+            events['on_raw_bulk_message_delete']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_message_edit']['enabled'] = await self._yes_no(_('Do you want to track message editing? [y]es/[n]o'), self.context)
+        if events['on_message_edit']['enabled']:
+            events['on_message_edit']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
         # Server events
-        events['on_guild_channel_create'] = await self._yes_no(_('Do you want to track channel creation? [y]es/[n]o'), self.context)
-        events['on_guild_channel_delete'] = await self._yes_no(_('Do you want to track channel deletion? [y]es/[n]o'), self.context)
-        events['on_guild_channel_update'] = await self._yes_no(_('Do you want to track channel updates? [y]es/[n]o'), self.context)
-        events['on_guild_update'] = await self._yes_no(_('Do you want to track server updates? [y]es/[n]o'), self.context)
+        events['on_guild_channel_create']['enabled'] = await self._yes_no(_('Do you want to track channel creation? [y]es/[n]o'), self.context)
+        if events['on_guild_channel_create']['enabled']:
+            events['on_guild_channel_create']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
-        events['on_guild_role_create'] = await self._yes_no(_('Do you want to track role creation? [y]es/[n]o'), self.context)
-        events['on_guild_role_delete'] = await self._yes_no(_('Do you want to track role deletion? [y]es/[n]o'), self.context)
-        events['on_guild_role_update'] = await self._yes_no(_('Do you want to track role updates? [y]es/[n]o'), self.context)
+        events['on_guild_channel_delete']['enabled'] = await self._yes_no(_('Do you want to track channel deletion? [y]es/[n]o'), self.context)
+        if events['on_guild_channel_delete']['enabled']:
+            events['on_guild_channel_delete']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_guild_channel_update']['enabled'] = await self._yes_no(_('Do you want to track channel updates? [y]es/[n]o'), self.context)
+        if events['on_guild_channel_update']['enabled']:
+            events['on_guild_channel_update']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_guild_update']['enabled'] = await self._yes_no(_('Do you want to track server updates? [y]es/[n]o'), self.context)
+        if events['on_guild_update']['enabled']:
+            events['on_guild_update']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_guild_role_create']['enabled'] = await self._yes_no(_('Do you want to track role creation? [y]es/[n]o'), self.context)
+        if events['on_guild_role_create']['enabled']:
+            events['on_guild_role_create']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_guild_role_delete']['enabled'] = await self._yes_no(_('Do you want to track role deletion? [y]es/[n]o'), self.context)
+        if events['on_guild_role_delete']['enabled']:
+            events['on_guild_role_delete']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
+
+        events['on_guild_role_update']['enabled'] = await self._yes_no(_('Do you want to track role updates? [y]es/[n]o'), self.context)
+        if events['on_guild_role_update']['enabled']:
+            events['on_guild_role_update']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
         # Warning events
-        events['on_warning'] = await self._yes_no(_('Do you want to track member warnings? [y]es/[n]o'), self.context)
-        events['on_kick'] = await self._yes_no(_('Do you want to track member kicks? [y]es/[n]o'), self.context)
-        events['on_ban'] = await self._yes_no(_('Do you want to track member bans? [y]es/[n]o'), self.context)
+        events['on_warning']['enabled'] = await self._yes_no(_('Do you want to track member warnings? [y]es/[n]o'), self.context)
+        if events['on_warning']['enabled']:
+            events['on_warning']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
-        if any([events['on_member_join'], events['on_member_ban'], events['on_member_unban'], events['on_member_remove'], events['on_voice_state_update']]):
-            channels['member_event_channel'] = await self._what_channel(_('Which channel do you want to use for member events? (please mention the channel)'), self.context)
-        else:
-            channels['member_event_channel'] = False
+        events['on_kick']['enabled'] = await self._yes_no(_('Do you want to track member kicks? [y]es/[n]o'), self.context)
+        if events['on_kick']['enabled']:
+            events['on_kick']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
-        if any([events['on_message_delete'], events['on_message_edit']]):
-            channels['message_event_channel'] = await self._what_channel(_('Which channel do you want to use for message events? (please mention the channel)'), self.context)
-        else:
-            channels['message_event_channel'] = False
+        events['on_ban']['enabled'] = await self._yes_no(_('Do you want to track member bans? [y]es/[n]o'), self.context)
+        if events['on_ban']['enabled']:
+            events['on_ban']['channel'] = await self._what_channel(_('Which channel should I use for this event? (please mention the channel)'), self.context)
 
-        if any([events['on_guild_channel_create'], events['on_guild_channel_delete'], events['on_guild_channel_update'], events['on_guild_role_create'],
-                events['on_guild_role_delete'], events['on_guild_role_update'], events['on_raw_bulk_message_delete']]):
-            channels['guild_event_channel'] = await self._what_channel(_('Which channel do you want to use for server events? (please mention the channel)'), self.context)
-        else:
-            channels['guild_event_channel'] = False
-
-        if any([events['on_warning'], events['on_kick'], events['on_ban']]):
-            channels['mod_event_channel'] = await self._what_channel(_('Which channel do you want to use for modding events? (please mention the channel)'), self.context)
-        else:
-            channels['mod_event_channel'] = False
-
-        guild_config['channels'] = channels
         guild_config['events'] = events
 
         return guild_config
