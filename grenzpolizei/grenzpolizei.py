@@ -222,7 +222,7 @@ class Grenzpolizei:
             avatar = author.avatar_url if author.avatar else author.default_avatar_url
             embed = discord.Embed(color=self.red)
             embed.set_author(name=_('Member has been banned'), icon_url=avatar)
-            embed.add_field(name=_('**Mod**', value='{0.display_name}').format(the_mod))
+            embed.add_field(name=_('**Mod**'), value='{0.display_name}').format(the_mod)
             embed.add_field(name=_('**Member**'), value='**{0.name}#{0.discriminator}** ({0.display_name} {0.id})'.format(author), inline=False)
             embed.set_footer(text='{}'.format(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')))
             if reason:
