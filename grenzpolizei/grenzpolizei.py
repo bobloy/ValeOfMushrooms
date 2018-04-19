@@ -8,6 +8,8 @@ _ = CogI18n('Grenzpolizei', __file__)
 
 # TODO:
 # Better error handling, especially to guild
+# Documentation
+# Disable all events
 
 
 class Grenzpolizei:
@@ -22,21 +24,77 @@ class Grenzpolizei:
         self.black = discord.Color.from_rgb(15, 2, 2)
 
     @commands.group(name='grenzpolizei', aliases=['gp'])
-    @commands.has_permissions(administrator=True)
     async def _grenzpolizei(self, context):
         '''
         The Grenzpolizei Cog
         '''
 
-    @_grenzpolizei.group(name='event')
+    @_grenzpolizei.group(name='set')
     @commands.has_permissions(administrator=True)
+    async def _grenzpolizei_set(self, context):
+        '''
+        Settings
+        '''
+
+    @_grenzpolizei_set.command(name='show')
+    async def _set_show(self, context):
+        '''
+        Show all settings
+        '''
+        guild = context.guild
+        all_settings = self.core.settings[str(guild.id)]
+        message = '```'
+        for key in all_settings:
+            if key == 'compact':
+                message += 'Compact Mode: {}\n'.format(all_settings['compact'])
+            if key == 'events':
+                message += 'Events:\n'
+                c = len(all_settings['events'])
+                for event in all_settings['events']:
+                    message += '\t{}\n\t\tEnabled: {}\n\t\tChannel: #{}\n'.format(event, all_settings['events'][event]['enabled'], context.guild.get_channel(all_settings['events'][event]['channel']).name)
+                    c -= 1
+        message += '```'
+        guild = context.guild
+        await context.send(message)
+
+    @_grenzpolizei_set.command(name='compact')
+    async def _compactmode(self, context):
+        '''
+        Toggle compact mode for smaller messages
+        '''
+        guild = context.guild
+        await context.send(await self.core.compactmode(guild))
+
+    @_grenzpolizei_set.group(name='event')
     async def _grenzpolizei_event(self, context):
         '''
-        Manually control change event settings
+        Manually control and change event settings
         '''
+
+    @_grenzpolizei_event.command(name='channel')
+    async def _channel_event(self, context, channel: discord.TextChannel, event_type: str):
+        '''
+        Change an event's channel
+        '''
+        guild = context.guild
+        if event_type.lower() in self.core.event_types:
+            self.core.settings[str(guild.id)]['events'][event_type]['enabled'] = True
+            self.core.settings[str(guild.id)]['events'][event_type]['channel'] = channel.id
+            await self.core.save_settings()
+            await context.send(_('Event \'{}\' enabled').format(event_type))
+        else:
+            await context.send(_('This event type does not exist.'))
+            message = _('Copy these exactly in order enable or disable them.\n')
+            for event in self.core.event_types:
+                message += '\n**{}**'.format(event)
+            embed = discord.Embed(title=_('Available event types'), description=message, color=self.green)
+            await context.send(embed=embed)
 
     @_grenzpolizei_event.command(name='enable')
     async def _enable_event(self, context, event_type: str, channel: discord.TextChannel):
+        '''
+        Enable an event
+        '''
         guild = context.guild
         if event_type.lower() in self.core.event_types:
             self.core.settings[str(guild.id)]['events'][event_type]['enabled'] = True
@@ -52,7 +110,10 @@ class Grenzpolizei:
             await context.send(embed=embed)
 
     @_grenzpolizei_event.command(name='disable')
-    async def _disable_event(self, context, event_type: str):
+    async def _disable_event(self, context, *event_type: str):
+        '''
+        Disable an event
+        '''
         guild = context.guild
         if event_type in self.core.event_types:
             guild = context.guild
@@ -94,18 +155,14 @@ class Grenzpolizei:
         except discord.Forbidden:
             await context.send(_('I don\'t have the permissions to create channels.'))
 
-    @_grenzpolizei.command(name='compact')
+    @_grenzpolizei.group(name='ignore')
     @commands.has_permissions(kick_members=True)
-    async def _compactmode(self, context):
+    async def _grenzpolizei_ignore(self, context):
         '''
-        Toggle compact mode for smaller messages
+        Ignore
         '''
-        guild = context.guild
-        channel = context.channel
-        await channel.send(await self.core.compactmode(guild))
 
-    @_grenzpolizei.command(name='ignoremember')
-    @commands.has_permissions(kick_members=True)
+    @_grenzpolizei_ignore.command(name='member')
     async def _ignoremember(self, context, member: discord.Member):
         '''
         Ignore a member, this is a toggle
@@ -114,8 +171,7 @@ class Grenzpolizei:
         channel = context.channel
         await channel.send(await self.core.ignoremember(guild, member))
 
-    @_grenzpolizei.command(name='ignorechannel')
-    @commands.has_permissions(kick_members=True)
+    @_grenzpolizei_ignore.command(name='channel')
     async def _ignorechannel(self, context, channel: discord.TextChannel):
         '''
         Ignore a channel, this is a toggle
