@@ -354,10 +354,17 @@ class Grenzpolizei:
         if isinstance(channel, discord.abc.GuildChannel):
             if await self.core._ignore(guild, author=author, channel=channel):
                 if await self.core._validate_event(guild) and author.id != self.bot.user.id:
+                    the_mod = False
+                    async for entry in guild.audit_logs(limit=1):
+                        if entry.action is discord.AuditLogAction.message_delete:
+                            the_mod = entry.user
+
                     embed = discord.Embed(color=self.red)
                     avatar = author.avatar_url if author.avatar else author.default_avatar_url
                     embed.set_author(name=_('Message removed'), icon_url=avatar)
                     embed.add_field(name=_('Member'), value='{0.display_name}#{0.discriminator} ({0.id})'.format(author))
+                    if the_mod:
+                        embed.add_field(name=_('Deleted By'), value='{0.display_name}#{0.discriminator} ({0.id})'.format(the_mod))
                     embed.add_field(name=_('Channel'), value=message.channel.mention)
                     if message.content:
                         embed.add_field(name=_('Message'), value=message.content, inline=False)
