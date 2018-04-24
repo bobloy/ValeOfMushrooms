@@ -3,13 +3,19 @@ from redbot.core.i18n import CogI18n
 from datetime import datetime
 from discord.ext import commands
 from .gp_core import GrenzpolizeiCore
+import redbot.core.data_manager as datam
+
+import logging
 
 _ = CogI18n('Grenzpolizei', __file__)
+
+VERSION = 2404181016
 
 # TODO:
 # Better error handling, especially to guild
 # Documentation
 # Disable all events
+# Fix passport
 
 
 class Grenzpolizei:
@@ -23,11 +29,27 @@ class Grenzpolizei:
         self.blue = discord.Color.blue()
         self.black = discord.Color.from_rgb(15, 2, 2)
 
+        logger_directory = str(datam.cog_data_path(self)).replace('\\', '/')
+
+        self.logger = logging.getLogger('Grenzpolizei')
+        self.logger.setLevel(logging.DEBUG)
+
+        fh = logging.FileHandler(logger_directory + 'grenzpolizei.log')
+        fh.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+
+        self.logger.addHandler(fh)
+
+        self.logger.debug('Initialized')
+
     @commands.group(name='grenzpolizei', aliases=['gp'])
     async def _grenzpolizei(self, context):
         '''
         The Grenzpolizei Cog
         '''
+        self.logger.debug('Command triggered: grenzpolizei')
 
     @_grenzpolizei.group(name='set')
     @commands.has_permissions(administrator=True)
@@ -35,33 +57,39 @@ class Grenzpolizei:
         '''
         Settings
         '''
+        self.logger.debug('Command triggered: set')
 
     @_grenzpolizei_set.command(name='show')
     async def _set_show(self, context):
         '''
         Show all settings
         '''
+        self.logger.debug('Command triggered: show')
         guild = context.guild
-        all_settings = self.core.settings[str(guild.id)]
-        message = '```'
-        for key in all_settings:
-            if key == 'compact':
-                message += 'Compact Mode: {}\n'.format(all_settings['compact'])
-            if key == 'events':
-                message += 'Events:\n'
-                c = len(all_settings['events'])
-                for event in all_settings['events']:
-                    message += '\t{}\n\t\tEnabled: {}\n\t\tChannel: #{}\n'.format(event, all_settings['events'][event]['enabled'], context.guild.get_channel(all_settings['events'][event]['channel']).name)
-                    c -= 1
-        message += '```'
-        guild = context.guild
-        await context.send(message)
+        if str(guild.id) in self.core.settings:
+            all_settings = self.core.settings[str(guild.id)]
+            message = '```'
+            for key in all_settings:
+                if key == 'compact':
+                    message += 'Compact Mode: {}\n'.format(all_settings['compact'])
+                if key == 'events':
+                    message += 'Events:\n'
+                    c = len(all_settings['events'])
+                    for event in all_settings['events']:
+                        message += '\t{}\n\t\tEnabled: {}\n\t\tChannel: #{}\n'.format(event, all_settings['events'][event]['enabled'], context.guild.get_channel(all_settings['events'][event]['channel']).name)
+                        c -= 1
+            message += '```'
+            guild = context.guild
+            await context.send(message)
+        else:
+            await context.send(_('Please run the setup first.'))
 
     @_grenzpolizei_set.command(name='compact')
     async def _compactmode(self, context):
         '''
         Toggle compact mode for smaller messages
         '''
+        self.logger.debug('Command triggered: compact')
         guild = context.guild
         await context.send(await self.core.compactmode(guild))
 
@@ -70,12 +98,14 @@ class Grenzpolizei:
         '''
         Manually control and change event settings
         '''
+        self.logger.debug('Command triggered: event')
 
     @_grenzpolizei_event.command(name='channel')
     async def _channel_event(self, context, channel: discord.TextChannel, event_type: str):
         '''
         Change an event's channel
         '''
+        self.logger.debug('Command triggered: channel')
         guild = context.guild
         if event_type.lower() in self.core.event_types:
             self.core.settings[str(guild.id)]['events'][event_type]['enabled'] = True
@@ -95,6 +125,7 @@ class Grenzpolizei:
         '''
         Enable an event
         '''
+        self.logger.debug('Command triggered: enable')
         guild = context.guild
         if event_type.lower() in self.core.event_types:
             self.core.settings[str(guild.id)]['events'][event_type]['enabled'] = True
@@ -114,6 +145,7 @@ class Grenzpolizei:
         '''
         Disable an event
         '''
+        self.logger.debug('Command triggered: disable')
         guild = context.guild
         if event_type in self.core.event_types:
             guild = context.guild
@@ -134,6 +166,7 @@ class Grenzpolizei:
         '''
         Begin your journey into authoritarianism
         '''
+        self.logger.debug('Command triggered: setup')
         x = await self.core._start_setup(context)
         if x:
             await context.channel.send(_('“Until they become conscious, they will never rebel”'))
@@ -146,6 +179,7 @@ class Grenzpolizei:
         '''
         RECOMMENDED! Begin your journey into authoritarianism, automatically.
         '''
+        self.logger.debug('Command triggered: autosetup')
         try:
             x = await self.core._start_auto_setup(context)
             if x:
@@ -161,12 +195,14 @@ class Grenzpolizei:
         '''
         Ignore
         '''
+        self.logger.debug('Command triggered: ignore')
 
     @_grenzpolizei_ignore.command(name='member')
     async def _ignoremember(self, context, member: discord.Member):
         '''
         Ignore a member, this is a toggle
         '''
+        self.logger.debug('Command triggered: member')
         guild = context.guild
         channel = context.channel
         await channel.send(await self.core.ignoremember(guild, member))
@@ -176,6 +212,7 @@ class Grenzpolizei:
         '''
         Ignore a channel, this is a toggle
         '''
+        self.logger.debug('Command triggered: channel')
         guild = context.guild
         channel = context.channel
         await channel.send(await self.core.ignorechannel(guild, channel))
@@ -186,6 +223,7 @@ class Grenzpolizei:
         '''
         Give out a warning
         '''
+        self.logger.debug('Command triggered: warn')
         author = context.author
         guild = context.guild
         warn = await self.on_warning(guild, author, member, reason)
@@ -201,46 +239,28 @@ class Grenzpolizei:
         '''
         Get all logged events from a user
         '''
+        self.logger.debug('Command triggered: passport')
+        await context.channel.send(_('This needs some rework. Sorry!'))
+        # def predicate(message):
+        #    return message.author.id == self.bot.user.id and message.embeds
 
-        def predicate(message):
-            return message.author.id == self.bot.user.id and message.embeds
-
-        tmp = {}
-        event_channels = [channel for channel in [event['channel'] for event in self.core.settings[str(context.guild.id)]['events']]]
-        if context.channel.id not in [event_channels[channel] for channel in dict(event_channels.items())]:
-            embed = discord.Embed(title=_('The passport of {0.name}#{0.discriminator} contains the following:').format(member), color=discord.Color.orange())
-            await context.channel.send(embed=embed)
-            for event_channel in ['mod_event_channel', 'member_event_channel']:
-                channel = self.bot.get_channel(self.core.settings[str(context.guild.id)]['channels'][event_channel])
-                if channel:
-                    async for message in channel.history(reverse=True):
-                        for embed in message.embeds:
-                            embed_dict = str(embed.to_dict())
-                            if str(member.id) in embed_dict:
-                                if message.id not in tmp:
-                                    await context.channel.send(embed=embed)
-                                    tmp[message.id] = True
-        else:
-            await context.channel.send(_('To prevent major issues, do this in a different channel and not in an event channel!'))
-
-    @_grenzpolizei.command(name='purge')
-    @commands.has_permissions(kick_members=True)
-    async def _purge(self, context, amount: int, member: discord.Member = None):
-        '''
-        Purge large amounts of messages
-        member is optional, when given it will delete only the messages of a member in the last n messages.
-        '''
-
-        def predicate(message):
-            if member:
-                return message if message.author == member else False
-            else:
-                return message
-        channel = context.channel
-        try:
-            await channel.purge(limit=amount+1, check=predicate)
-        except discord.Forbidden:
-            await context.channel.send(embed=discord.Embed(title=_('Hey buddy, I need permissions to manage messages.'), color=self.red))
+        # tmp = {}
+        # event_channels = [channel for channel in [event['channel'] for event in self.core.settings[str(context.guild.id)]['events']]]
+        # if context.channel.id not in [event_channels[channel] for channel in dict(event_channels.items())]:
+        #    embed = discord.Embed(title=_('The passport of {0.name}#{0.discriminator} contains the following:').format(member), color=discord.Color.orange())
+        #    await context.channel.send(embed=embed)
+        #    for event_channel in ['mod_event_channel', 'member_event_channel']:
+        #        channel = self.bot.get_channel(self.core.settings[str(context.guild.id)]['channels'][event_channel])
+        #        if channel:
+        #            async for message in channel.history(reverse=True):
+        #                for embed in message.embeds:
+        #                    embed_dict = str(embed.to_dict())
+        #                    if str(member.id) in embed_dict:
+        #                        if message.id not in tmp:
+        #                            await context.channel.send(embed=embed)
+        #                            tmp[message.id] = True
+        # else:
+        #    await context.channel.send(_('To prevent major issues, do this in a different channel and not in an event channel!'))
 
     async def on_warning(self, guild, mod, member, reason):
         if await self.core._validate_event(guild) and member.id != self.bot.user.id:
