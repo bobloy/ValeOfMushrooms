@@ -140,22 +140,21 @@ class GrenzpolizeiCore:
         channel = await self._get_channel(guild)
         if channel:
             if embed:
-                if 'compact' in self.settings[str(guild.id)]:
-                    if not self.settings[str(guild.id)]['compact']:
-                        await channel.send(content=content, embed=embed)
-                    else:
-                        emdict = embed.to_dict()
-                        content = ''
-                        if 'author' in emdict:
-                            content += '**{}**\n'.format(emdict['author']['name'])
-                        if 'fields' in emdict:
-                            for field in emdict['fields']:
-                                content += '**{}:** {}\n'.format(field['name'].replace('\n', ' ').replace('**', ''), field['value'].replace('\n', ''))
-                        if 'description' in emdict:
-                            content += '{}\n'.format(emdict['description'])
-                        if 'footer' in emdict:
-                            content += '_{}_'.format(emdict['footer']['text'])
-                        await channel.send(content=content)
+                if not self.settings[str(guild.id)]['compact']:
+                    await channel.send(content=content, embed=embed)
+                else:
+                    emdict = embed.to_dict()
+                    content = ''
+                    if 'author' in emdict:
+                        content += '**{}**\n'.format(emdict['author']['name'])
+                    if 'fields' in emdict:
+                        for field in emdict['fields']:
+                            content += '**{}:** {}\n'.format(field['name'].replace('\n', ' ').replace('**', ''), field['value'].replace('\n', ''))
+                    if 'description' in emdict:
+                        content += '{}\n'.format(emdict['description'])
+                    if 'footer' in emdict:
+                        content += '_{}_'.format(emdict['footer']['text'])
+                    await channel.send(content=content)
             elif attachment:
                 await channel.send(content=content, file=discord.File(attachment))
             elif content:
@@ -180,6 +179,7 @@ class GrenzpolizeiCore:
         if guild.id not in self.settings:
             self.settings[str(guild.id)] = {}
         self.settings[str(guild.id)] = await GrenzpolizeiSetup(self.bot, context).setup()
+        self.settings[str(guild.id)]['compact'] = False
         await self.save_settings()
         return True
 
@@ -188,5 +188,6 @@ class GrenzpolizeiCore:
         if guild.id not in self.settings:
             self.settings[str(guild.id)] = {}
         self.settings[str(guild.id)] = await GrenzpolizeiSetup(self.bot, context).auto_setup()
+        self.settings[str(guild.id)]['compact'] = False
         await self.save_settings()
         return True
