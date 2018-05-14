@@ -1,8 +1,8 @@
 import asyncio
 import discord
-from redbot.core.i18n import CogI18n
+from redbot.core.i18n import Translator
 
-_ = CogI18n('GrenzpolizeiSetup', __file__)
+_ = Translator('GrenzpolizeiSetup', __file__)
 
 
 class GrenzpolizeiSetup:

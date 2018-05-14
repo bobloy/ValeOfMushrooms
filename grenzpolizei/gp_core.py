@@ -5,9 +5,9 @@ import os
 from .gp_setup import GrenzpolizeiSetup
 import redbot.core.data_manager as datam
 import json
-from redbot.core.i18n import CogI18n
+from redbot.core.i18n import Translator
 
-_ = CogI18n('GrenzpolizeiCore', __file__)
+_ = Translator('GrenzpolizeiCore', __file__)
 
 
 class GrenzpolizeiCore:
