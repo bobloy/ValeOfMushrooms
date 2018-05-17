@@ -40,7 +40,7 @@ class Grenzpolizei:
         '''
         Settings
         '''
-        if context.invoked_subcommand is None:
+        if context.invoked_subcommand is None or context.invoked_subcommand == self._grenzpolizei_set:
             await context.send_help()
 
     @_grenzpolizei_set.command(name='show')
@@ -80,7 +80,7 @@ class Grenzpolizei:
         '''
         Manually control and change event settings
         '''
-        if context.invoked_subcommand is None:
+        if context.invoked_subcommand is None  or context.invoked_subcommand == self._grenzpolizei_event:
             await context.send_help()
 
     @_grenzpolizei_event.command(name='channel')
@@ -173,7 +173,7 @@ class Grenzpolizei:
         '''
         Ignore
         '''
-        if context.invoked_subcommand is None:
+        if context.invoked_subcommand is None  or context.invoked_subcommand == self._grenzpolizei_ignore:
             await context.send_help()
 
     @_grenzpolizei_ignore.command(name='member')
